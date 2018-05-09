@@ -33,6 +33,6 @@ http.listen(port, function(){
   console.log('socket.io server listening on *:' + port)
 })
 
-app.listen(8080, function() {
-  console.log('serving on 8080')
+app.listen(443, function() {
+  console.log('serving on 443')
 })
