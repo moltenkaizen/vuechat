@@ -29,10 +29,10 @@ io.on('connection', function(socket){
 
 })
 
-http.listen(port, function(){
-  console.log('socket.io server listening on *:' + port)
+http.listen(3000, function(){
+  console.log('socket.io server listening on *:3000')
 })
 
-app.listen(443, function() {
-  console.log('serving on 443')
+app.listen(port, function() {
+  console.log('serving on ' + port)
 })
