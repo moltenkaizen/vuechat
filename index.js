@@ -1,18 +1,38 @@
-var app = require('express')();
-var http = require('http').Server(app);
-var io = require('socket.io')(http);
-var port = process.env.PORT || 3000;
+const express = require('express')
+const app = express()
+const morgan = require('morgan')
+const http = require('http').Server(express)
+const io = require('socket.io')(http, { origins: 'localhost:* http://localhost:*'})
+const port = process.env.PORT || 3000
+
+app.use(morgan('combined'))
+app.use(express.static('client'))
 
 app.get('/', function(req, res){
-  res.sendFile(__dirname + '/index.html');
+  res.sendFile(__dirname + '/client/index.html');
 });
 
 io.on('connection', function(socket){
-  socket.on('chat message', function(msg){
-    io.emit('chat message', msg);
-  });
-});
+  console.log('Someone has connected!')
+
+  socket.on('message', function(msg){
+    io.emit('message', msg)
+  })
+
+  socket.on('typing', function(user){
+    io.emit('typing', user)
+  })
+
+  socket.on('notyping', function(user){
+    io.emit('notyping', user)
+  })
+
+})
 
 http.listen(port, function(){
-  console.log('listening on *:' + port);
-});
+  console.log('socket.io server listening on *:' + port)
+})
+
+app.listen(8080, function() {
+  console.log('serving on 8080')
+})
