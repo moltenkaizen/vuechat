@@ -3,7 +3,8 @@ const app = express()
 const morgan = require('morgan')
 const http = require('http').Server(express)
 const io = require('socket.io')(http, { origins: 'localhost:* http://localhost:*'})
-const port = process.env.PORT || 3000
+const socketPort = 3000
+const httpPort = process.env.PORT || 5000
 
 app.use(morgan('combined'))
 app.use(express.static('client'))
@@ -29,10 +30,10 @@ io.on('connection', function(socket){
 
 })
 
-http.listen(3000, function(){
-  console.log('socket.io server listening on *:3000')
+http.listen(socketPort, function(){
+  console.log('socket.io server listening on *:' + socketPort)
 })
 
-app.listen(port, function() {
-  console.log('serving on ' + port)
+app.listen(httpPort, function() {
+  console.log('serving on ' + httpPort)
 })
