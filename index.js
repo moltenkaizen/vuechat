@@ -1,17 +1,15 @@
+'use strict'
+
 const express = require('express')
-const app = express()
-const morgan = require('morgan')
-const http = require('http').Server(express)
-const io = require('socket.io')(http, { origins: 'localhost:* http://localhost:*'})
-const socketPort = 3000
-const httpPort = process.env.PORT || 5000
+const socketIO = require('socket.io')
 
-app.use(morgan('combined'))
-app.use(express.static('client'))
+const PORT = process.env.PORT || 3000
 
-app.get('/', function(req, res){
-  res.sendFile(__dirname + '/client/index.html');
-});
+const server = express()
+  .use(express.static('client'))
+  .listen(PORT, () => console.log(`Listening on ${ PORT }`))
+
+const io = socketIO(server);
 
 io.on('connection', function(socket){
   console.log('Someone has connected!')
@@ -28,12 +26,4 @@ io.on('connection', function(socket){
     io.emit('notyping', user)
   })
 
-})
-
-http.listen(socketPort, function(){
-  console.log('socket.io server listening on *:' + socketPort)
-})
-
-app.listen(httpPort, function() {
-  console.log('serving on ' + httpPort)
 })
