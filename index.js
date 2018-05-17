@@ -27,69 +27,64 @@ io.on('connection', function (socket) {
   // when the client emits 'new message', this listens and executes
   socket.on('newMessage', function (data) {
     // we tell the client to execute 'new message'
-    console.log(`${socket.username} sent ${data}`)
+    console.log(`${socket.displayName} sent ${data}`)
     io.emit('NEW_MESSAGE', {
-      author: socket.username,
-      body: data
+      author: socket.displayName,
+      body: data,
+      photoURL: socket.photoURL
     });
   });
 
   // when the client emits 'add user', this listens and executes
-  socket.on('add user', function (username) {
+  socket.on('add user', function (user) {
     // we store the username in the socket session for this client
-    socket.username = username;
-    console.log(`${username} ${socket.conn.id} joined!`)
-    // add the client's username to the global list
-    // usernames[username] = username;
-    // ++numUsers;
-    clients.push(socket.username)
+    socket.displayName = user.displayName;
+    socket.email = user.email;
+    socket.photoURL = user.photoURL;
+    console.log(`${socket.displayName} ${socket.conn.id} joined!`)
+    // add the client's displayName to the global list
+    clients.push({
+      displayName: socket.displayName,
+      email: socket.email,
+      photoURL: socket.photoURL
+    })
     addedUser = true;
-    socket.emit('LOGIN', {
+    // This may need to be io.emit vs socket.emit to send to all?
+    io.emit('LOGIN', {
       clients,
       numUsers: clients.length
     });
     console.log('clients:', clients)
     // echo globally (all clients) that a person has connected
-    socket.emit('user joined', socket.username);
-  });
-
-  socket.on('change username', function (name) {
-    let oldName = socket.username;
-    socket.username = name;
-    socket.emit('username changed', {
-      old: oldName,
-      new: socket.username
-    });
+    socket.emit('user joined', socket.displayName);
   });
 
   // when the client emits 'typing', we broadcast it to others
   socket.on('typing', function () {
-    // console.log(socket.username, 'is typing')
+    // console.log(socket.displayName, 'is typing')
     socket.broadcast.emit('typing', {
-      username: socket.username
+      displayName: socket.displayName
     });
   });
 
   // when the client emits 'stop typing', we broadcast it to others
   socket.on('stop typing', function () {
     socket.broadcast.emit('stop typing', {
-      username: socket.username
+      displayName: socket.displayName
     });
   });
 
   // when the user disconnects.. perform this
   socket.on('disconnect', function () {
-    // remove the username from global clients list
+    // remove the displayName from global clients list
     if (addedUser) {
       let index = clients.indexOf(socket)
         clients.splice(index, 1)
-      // delete clients[socket.username];
-      // --numUsers;
 
       // echo globally that this client has left
       socket.broadcast.emit('user left', {
-        username: socket.username,
-        numUsers: clients.length
+        displayName: socket.displayName,
+        clients
       });
     }
   });
