@@ -16,10 +16,8 @@ app.use(express.static(__dirname + '/client'));
 
 // Chatroom
 
-// usernames which are currently connected to the chat
-// let usernames = {};
+// client array which are currently connected to the chat
 let clients = [];
-let numUsers = 0;
 
 io.on('connection', function (socket) {
   let addedUser = false;
@@ -28,10 +26,12 @@ io.on('connection', function (socket) {
   socket.on('newMessage', function (data) {
     // we tell the client to execute 'new message'
     console.log(`${socket.displayName} sent ${data}`)
+    const time = new Date().toLocaleString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true })
     io.emit('NEW_MESSAGE', {
       author: socket.displayName,
       body: data,
-      photoURL: socket.photoURL
+      photoURL: socket.photoURL,
+      time
     });
   });
 
@@ -50,29 +50,35 @@ io.on('connection', function (socket) {
     })
     addedUser = true;
     // This may need to be io.emit vs socket.emit to send to all?
-    io.emit('LOGIN', {
-      clients,
-      numUsers: clients.length
-    });
+    io.emit('LOGIN', clients);
     console.log('clients:', clients)
     // echo globally (all clients) that a person has connected
-    socket.emit('user joined', socket.displayName);
+    io.emit('user joined', socket.displayName);
   });
 
   // when the client emits 'typing', we broadcast it to others
-  socket.on('typing', function () {
+  socket.on('TYPING', function () {
     // console.log(socket.displayName, 'is typing')
-    socket.broadcast.emit('typing', {
+    io.emit('TYPING', {
       displayName: socket.displayName
     });
   });
 
   // when the client emits 'stop typing', we broadcast it to others
-  socket.on('stop typing', function () {
-    socket.broadcast.emit('stop typing', {
+  socket.on('NOT_TYPING', function () {
+    io.emit('NOT_TYPING', {
       displayName: socket.displayName
     });
   });
+
+  socket.on('USER_LEFT', function (user) {
+    console.log('user left: ', {
+      displayName: socket.displayName,
+      email: socket.email,
+      photoURL: socket.photoURL
+    })
+    io.emit('USER_LEFT', user)
+  })
 
   // when the user disconnects.. perform this
   socket.on('disconnect', function () {
@@ -80,12 +86,17 @@ io.on('connection', function (socket) {
     if (addedUser) {
       let index = clients.indexOf(socket)
         clients.splice(index, 1)
-
-      // echo globally that this client has left
-      socket.broadcast.emit('user left', {
+      console.log('user left: ', {
         displayName: socket.displayName,
-        clients
-      });
+        email: socket.email,
+        photoURL: socket.photoURL
+      })
+      // echo globally that this client has left
+      io.emit('USER_LEFT', {
+        displayName: socket.displayName,
+        email: socket.email,
+        photoURL: socket.photoURL
+      })
     }
   });
 });
